@@ -14,7 +14,7 @@ extend schema
     }
   )
 
-type Airport @key(fields: "icao", resolvable: false) {
+type Airport @key(fields: "icao") {
   icao: String!
   faaId: String!
   type: String!
@@ -22,6 +22,25 @@ type Airport @key(fields: "icao", resolvable: false) {
   beacon: String!
   operations: String!
   weather: Weather
+    @connect(
+        source: "faa"
+        http: {
+            GET: "metar?ids={$this.icao}&format=json"
+        }
+        selection: """
+        $->first {
+            icao: icaoId
+            temp  
+            dewp
+            wdir
+            wspd
+            visib
+            altim
+            precip
+            elev
+        }
+        """
+    )
 }
 
 type Weather @key(fields: "icao") {

@@ -22,6 +22,31 @@ type Airport @key(fields: "icao") {
   icao: String!
   name: String
   iataId: String
+  outboundFlights: [Position]
+    @connect(
+      source: "flight_radar"
+      http: {
+          GET: "live/flight-positions/full?airports=outbound:{$this.icao}"
+      }
+      selection: """
+      $.data {
+        fr24_id
+        hex 
+        callsign
+        lat
+        lon
+        track
+        alt
+        gspeed
+        vspeed
+        squawk
+        timestamp
+        from: orig_icao
+        to: dest_icao
+      }
+      """
+    )
+  
 }
 
 type Airline {
@@ -42,7 +67,8 @@ type Position {
   vspeed: Int!
   squawk: String!
   timestamp: String!
-  source: String!
+  from: String!
+  to: String!
 }
 
 type Query {
@@ -70,30 +96,6 @@ type Query {
       icao
       iata
       name
-      """
-    )
-
-  positions(airportIcao: String!): [Position]
-    @connect(
-      source: "flight_radar"
-      http: {
-          GET: "live/flight-positions/full?airports={$args.airportIcao}"
-      }
-      selection: """
-      $.data {
-        fr24_id
-        hex 
-        callsign
-        lat
-        lon
-        track
-        alt
-        gspeed
-        vspeed
-        squawk
-        timestamp
-        source
-      }
       """
     )
 }

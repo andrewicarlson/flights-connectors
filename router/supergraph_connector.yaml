@@ -4,8 +4,8 @@ subgraphs:
   flight_radar:
     routing_url:  http://ignored
     schema:
-      file: ./src/connectors/flight_radar.graphql
+      file: ../src/connectors/flight_radar.graphql
   faa:
     routing_url:  http://ignored
     schema:
-      file: ./src/connectors/faa.graphql
+      file: ../src/connectors/faa.graphql
