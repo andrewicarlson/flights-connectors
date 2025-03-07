@@ -47,8 +47,8 @@ type Airport @key(fields: "icao") {
         vspeed
         squawk
         timestamp
-        from: orig_icao
-        to: dest_icao
+        orig_icao
+        dest_icao
       }
       """
     )
@@ -72,7 +72,6 @@ type Airport @key(fields: "icao") {
         }
         """
     )
-  
 }
 
 type Weather {
@@ -99,8 +98,32 @@ type Position {
   vspeed: Int!
   squawk: String!
   timestamp: String!
-  from: String!
-  to: String!
+  orig_icao: String!
+  dest_icao: String!
+  from: Airport
+    @connect(
+      source: "flight_radar"
+      http: {
+          GET: "static/airports/{$this.orig_icao}/light"
+      }
+      selection: """
+      icao
+      iataId: iata
+      name
+      """
+    )
+  to: Airport
+    @connect(
+      source: "flight_radar"
+      http: {
+          GET: "static/airports/{$this.dest_icao}/light"
+      }
+      selection: """
+      icao
+      iataId: iata
+      name
+      """
+    )
 }
 
 type Query {
