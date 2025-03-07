@@ -12,45 +12,27 @@ This repository contains example connectors that orchestrate API requests betwee
 ## Sample operations
 
 ```graphql
-query {
-  airport(icao: $code) {
+query($icao: String!) {
+  airport(icao: $icao) {
     icao
     iataId
     name
-    operations
-    tower
-    type
     weather {
-      icao
       temp
-      dewp
       wdir
       wspd
-      visib
-      altim
       precip
-      elev
+    }
+    outboundFlights {
+      alt
+      callsign
+      from {
+        icao
+      }
+      to {
+        icao
+      }
     }
   }
 }
 ```
-
-```graphql
-query {
-  positions(icao: $positionsIcao) {
-    fr24_id
-    hex
-    callsign
-    lat
-    lon
-    track
-    alt
-    gspeed
-    vspeed
-    squawk
-    timestamp
-    source
-  }
-}
-```
-
