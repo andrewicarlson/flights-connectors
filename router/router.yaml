@@ -1,0 +1,25 @@
+supergraph:
+  # The socket address and port to listen on
+  listen: 127.0.0.1:8000
+
+headers:
+  all:
+    request:
+      - propagate:
+          matching: .*
+
+telemetry:
+  instrumentation:
+    spans: 
+      mode: spec_compliant
+
+cors:
+  # Set to true to allow any origin
+  # (Defaults to false)
+  allow_any_origin: true
+
+connectors:
+  subgraphs:
+    flight_radar:
+      $config:
+        flightRadarApiKey: "${env.FLIGHT_RADAR_API_KEY}"

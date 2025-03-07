@@ -1,0 +1,99 @@
+extend schema
+  @link(
+    url: "https://specs.apollo.dev/federation/v2.10"
+    import: ["@key", "@shareable"]
+  )
+  @link(
+    url: "https://specs.apollo.dev/connect/v0.1"
+    import: ["@source", "@connect"]
+  )
+  @source(
+    name: "flight_radar"
+    http: {
+      baseURL: "https://fr24api.flightradar24.com/api/"
+      headers: [
+        { name: "Authorization", value: "Bearer {$config.flightRadarApiKey}" }
+        { name: "Accept-Version", value: "v1"}
+      ]
+    }
+  )
+
+type Airport @key(fields: "icao") {
+  icao: String!
+  name: String
+  iataId: String
+}
+
+type Airline {
+  icao: String!
+  name: String
+  iata: String
+}
+
+type Position {
+  fr24_id: String!
+  hex: String
+  callsign: String
+  lat: Float!
+  lon: Float!
+  track: Int!
+  alt: Int!
+  gspeed: Int!
+  vspeed: Int!
+  squawk: String!
+  timestamp: String!
+  source: String!
+}
+
+type Query {
+  airport(icao: String!): Airport
+    @connect(
+      source: "flight_radar"
+      http: {
+          GET: "static/airports/{$args.icao}/light"
+      }
+      selection: """
+      icao
+      iataId: iata
+      name
+      """
+      entity: true
+    )
+
+  airline(icao: String!): Airline
+    @connect(
+      source: "flight_radar"
+      http: {
+          GET: "static/airlines/{$args.icao}/light"
+      }
+      selection: """
+      icao
+      iata
+      name
+      """
+    )
+
+  positions(airportIcao: String!): [Position]
+    @connect(
+      source: "flight_radar"
+      http: {
+          GET: "live/flight-positions/full?airports={$args.airportIcao}"
+      }
+      selection: """
+      $.data {
+        fr24_id
+        hex 
+        callsign
+        lat
+        lon
+        track
+        alt
+        gspeed
+        vspeed
+        squawk
+        timestamp
+        source
+      }
+      """
+    )
+}
