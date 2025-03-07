@@ -32,7 +32,7 @@ type Airport @key(fields: "icao") {
     @connect(
       source: "flight_radar"
       http: {
-          GET: "live/flight-positions/full?airports=outbound:{$this.icao}"
+          GET: "live/flight-positions/full?airports=outbound:{$this.icao}&limit=3"
       }
       selection: """
       $.data {
