@@ -17,6 +17,12 @@ extend schema
       ]
     }
   )
+  @source(
+    name: "faa"
+    http: {
+      baseURL: "https://aviationweather.gov/api/data/"
+    }
+  )
 
 type Airport @key(fields: "icao") {
   icao: String!
@@ -46,13 +52,39 @@ type Airport @key(fields: "icao") {
       }
       """
     )
+  weather: Weather
+    @connect(
+        source: "faa"
+        http: {
+            GET: "metar?ids={$this.icao}&format=json"
+        }
+        selection: """
+        $->first {
+            icao: icaoId
+            temp  
+            dewp
+            wdir
+            wspd
+            visib
+            altim
+            precip
+            elev
+        }
+        """
+    )
   
 }
 
-type Airline {
+type Weather {
   icao: String!
-  name: String
-  iata: String
+  temp: Float
+  dewp: Float
+  wdir: Int
+  wspd: Int
+  visib: Int
+  altim: Int
+  precip: Float
+  elev: Int
 }
 
 type Position {
@@ -84,18 +116,5 @@ type Query {
       name
       """
       entity: true
-    )
-
-  airline(icao: String!): Airline
-    @connect(
-      source: "flight_radar"
-      http: {
-          GET: "static/airlines/{$args.icao}/light"
-      }
-      selection: """
-      icao
-      iata
-      name
-      """
     )
 }

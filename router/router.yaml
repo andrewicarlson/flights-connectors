@@ -20,6 +20,6 @@ cors:
 
 connectors:
   subgraphs:
-    flight_radar:
+    flights:
       $config:
         flightRadarApiKey: "${env.FLIGHT_RADAR_API_KEY}"

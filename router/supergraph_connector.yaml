@@ -1,11 +1,7 @@
 federation_version: =2.10.0
 
 subgraphs:
-  flight_radar:
+  flights:
     routing_url:  http://ignored
     schema:
-      file: ../src/connectors/flight_radar.graphql
-  faa:
-    routing_url:  http://ignored
-    schema:
-      file: ../src/connectors/faa.graphql
+      file: ../src/connectors/flights.graphql
