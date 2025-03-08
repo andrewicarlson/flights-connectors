@@ -29,25 +29,6 @@ type Airport {
   name: String
   iataId: String
   weather: Weather
-  #   @connect(
-  #     source: "faa"
-  #     http: {
-  #         GET: "metar?ids={$this.icao}&format=json"
-  #     }
-  #     selection: """
-  #       $->first {
-  #           icao
-  #           temp  
-  #           dewp
-  #           wdir
-  #           wspd
-  #           visib
-  #           altim
-  #           precip
-  #           elev
-  #       }
-  #     """
-  # )
   outboundFlights: [Position]
     @connect(
       source: "flight_radar"
