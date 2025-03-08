@@ -4,4 +4,4 @@ subgraphs:
   flights:
     routing_url:  http://ignored
     schema:
-      file: ../src/connectors/flights.graphql
+      file: ./src/connectors/flights.graphql
