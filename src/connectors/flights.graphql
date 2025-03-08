@@ -24,10 +24,11 @@ extend schema
     }
   )
 
-type Airport @key(fields: "icao") {
+type Airport {
   icao: String!
   name: String
   iataId: String
+  weather: Weather
   outboundFlights: [Position]
     @connect(
       source: "flight_radar"
@@ -52,30 +53,10 @@ type Airport @key(fields: "icao") {
       }
       """
     )
-  weather: Weather
-    @connect(
-        source: "faa"
-        http: {
-            GET: "metar?ids={$this.icao}&format=json"
-        }
-        selection: """
-        $->first {
-            icao: icaoId
-            temp  
-            dewp
-            wdir
-            wspd
-            visib
-            altim
-            precip
-            elev
-        }
-        """
-    )
 }
 
 type Weather {
-  icao: String!
+  icao: String
   temp: Float
   dewp: Float
   wdir: Int
@@ -100,18 +81,40 @@ type Position {
   timestamp: String!
   orig_icao: String!
   dest_icao: String!
-  from: Airport
-    @connect(
-      source: "flight_radar"
+  from: Airport!
+  @connect(
+    source: "flight_radar"
+    http: {
+        GET: "static/airports/{$this.orig_icao}/light"
+    }
+    selection: """
+    icao
+    iataId: iata
+    name
+    """
+  )
+  @connect(
+      source: "faa"
       http: {
-          GET: "static/airports/{$this.orig_icao}/light"
+          GET: "metar?ids={$this.orig_icao}&format=json"
       }
       selection: """
-      icao
-      iataId: iata
-      name
+      $->first {
+        weather: {
+          icao
+          temp  
+          dewp
+          wdir
+          wspd
+          visib
+          altim
+          precip
+          elev
+        }
+      }
       """
-    )
+  )
+
   to: Airport
     @connect(
       source: "flight_radar"
@@ -122,8 +125,32 @@ type Position {
       icao
       iataId: iata
       name
+      weather: {
+        icao: $this.dest_icao
+      }
       """
     )
+    @connect(
+      source: "faa"
+      http: {
+          GET: "metar?ids={$this.dest_icao}&format=json"
+      }
+      selection: """
+      $->first {
+        weather: {
+          icao
+          temp  
+          dewp
+          wdir
+          wspd
+          visib
+          altim
+          precip
+          elev
+        }
+      }
+      """
+  )
 }
 
 type Query {
@@ -138,6 +165,26 @@ type Query {
       iataId: iata
       name
       """
-      entity: true
+    )
+    @connect(
+        source: "faa"
+        http: {
+            GET: "metar?ids={$args.icao}&format=json"
+        }
+        selection: """
+        $->first {
+          weather: {
+            icao
+            temp  
+            dewp
+            wdir
+            wspd
+            visib
+            altim
+            precip
+            elev
+          }
+        }
+        """
     )
 }
