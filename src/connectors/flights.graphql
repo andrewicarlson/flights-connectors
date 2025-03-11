@@ -24,11 +24,27 @@ extend schema
     }
   )
 
+type Country {
+  code: String
+  name: String
+}
+
+type Timezone {
+  name: String
+  offset: Int
+}
+
 type Airport {
   icao: String!
   name: String
-  iataId: String
   weather: Weather
+  lat: Float
+  lon: Float
+  elevation: Int
+  city: String
+  state: String
+  country: Country
+  timezone: Timezone
   outboundFlights: [Position]
     @connect(
       source: "flight_radar"
@@ -47,6 +63,32 @@ type Airport {
         gspeed
         vspeed
         squawk
+        operating_as
+        timestamp
+        orig_icao
+        dest_icao
+      }
+      """
+    )
+  inboundFlights: [Position]
+    @connect(
+      source: "flight_radar"
+      http: {
+          GET: "live/flight-positions/full?airports=inbound:{$this.icao}&limit=3"
+      }
+      selection: """
+      $.data {
+        fr24_id
+        hex 
+        callsign
+        lat
+        lon
+        track
+        alt
+        gspeed
+        vspeed
+        squawk
+        operating_as
         timestamp
         orig_icao
         dest_icao
@@ -64,7 +106,6 @@ type Weather {
   visib: Int
   altim: Int
   precip: Float
-  elev: Int
 }
 
 type Position {
@@ -78,6 +119,7 @@ type Position {
   gspeed: Int!
   vspeed: Int!
   squawk: String!
+  operating_as: String!
   timestamp: String!
   orig_icao: String!
   dest_icao: String!
@@ -85,12 +127,24 @@ type Position {
   @connect(
     source: "flight_radar"
     http: {
-        GET: "static/airports/{$this.orig_icao}/light"
+        GET: "static/airports/{$this.orig_icao}/full"
     }
     selection: """
     icao
-    iataId: iata
     name
+    lat
+    lon
+    elevation
+    city
+    state
+    country {
+      code
+      name
+    }
+    timezone {
+      name
+      offset
+    }
     """
   )
   @connect(
@@ -101,7 +155,7 @@ type Position {
       selection: """
       $->first {
         weather: {
-          icao
+          icao: icaoId
           temp  
           dewp
           wdir
@@ -109,8 +163,10 @@ type Position {
           visib
           altim
           precip
-          elev
         }
+        elevation: elev
+        lat
+        lon
       }
       """
   )
@@ -119,12 +175,24 @@ type Position {
     @connect(
       source: "flight_radar"
       http: {
-          GET: "static/airports/{$this.dest_icao}/light"
+          GET: "static/airports/{$this.dest_icao}/full"
       }
       selection: """
       icao
-      iataId: iata
       name
+      lat
+      lon
+      elevation
+      city
+      state
+      country {
+        code
+        name
+      }
+      timezone {
+        name
+        offset
+      }
       weather: {
         icao: $this.dest_icao
       }
@@ -138,7 +206,7 @@ type Position {
       selection: """
       $->first {
         weather: {
-          icao
+          icao: icaoId
           temp  
           dewp
           wdir
@@ -146,8 +214,10 @@ type Position {
           visib
           altim
           precip
-          elev
         }
+        elevation: elev
+        lat
+        lon
       }
       """
   )
@@ -158,12 +228,24 @@ type Query {
     @connect(
       source: "flight_radar"
       http: {
-          GET: "static/airports/{$args.icao}/light"
+          GET: "static/airports/{$args.icao}/full"
       }
       selection: """
       icao
-      iataId: iata
       name
+      lat
+      lon
+      elevation
+      city
+      state
+      country {
+        code
+        name
+      }
+      timezone {
+        name
+        offset
+      }
       """
     )
     @connect(
@@ -174,7 +256,7 @@ type Query {
         selection: """
         $->first {
           weather: {
-            icao
+            icao: icaoId
             temp  
             dewp
             wdir
@@ -182,9 +264,63 @@ type Query {
             visib
             altim
             precip
-            elev
           }
+          elevation: elev
+          lat
+          lon
         }
         """
     )
+    # @connect(
+    #   source: "flight_radar"
+    #   http: {
+    #       GET: "live/flight-positions/full?airports=outbound:{$args.icao}&limit=3"
+    #   }
+    #   selection: """
+    #   outboundFlights: {
+    #     $.data {
+    #       fr24_id
+    #       hex 
+    #       callsign
+    #       lat
+    #       lon
+    #       track
+    #       alt
+    #       gspeed
+    #       vspeed
+    #       squawk
+    #       operating_as
+    #       timestamp
+    #       orig_icao
+    #       dest_icao
+    #     }
+    #   }
+    #   """
+    # )
+    # @connect(
+    #   source: "flight_radar"
+    #   http: {
+    #       GET: "live/flight-positions/full?airports=inbound:{$args.icao}&limit=3"
+    #   }
+    #   selection: """
+    #   inboundFlights: {
+    #     $.data {
+    #       fr24_id
+    #       hex 
+    #       callsign
+    #       lat
+    #       lon
+    #       track
+    #       alt
+    #       gspeed
+    #       vspeed
+    #       squawk
+    #       operating_as
+    #       timestamp
+    #       orig_icao
+    #       dest_icao
+    #     }
+    #   }
+    #   """
+    # )
 }
